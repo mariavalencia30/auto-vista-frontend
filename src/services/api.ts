@@ -9,7 +9,7 @@ const VEHICLES_PORT = '3303';
 const PURCHASES_PORT = '3310';
 
 // Endpoints base para cada microservicio
-const USERS_API = `${API_BASE}:${USERS_PORT}/api/users`;
+const USERS_API = `${API_BASE}:${USERS_PORT}/api/usuarios`;
 
 // Cliente axios para el servicio de usuarios
 const usersApi = axios.create({
@@ -52,12 +52,29 @@ usersApi.interceptors.response.use(
 // Servicios de autenticación y usuarios
 export const authService = {
   register: async (userData: any) => {
-    const response = await usersApi.post('/register', userData);
+    const { name, email, phone, password, ...rest } = userData;
+    
+    // Adaptar al formato esperado por la API
+    const requestData = {
+      nombre: name,
+      email: email,
+      telefono: phone,
+      contraseña: password,
+      ...rest
+    };
+    
+    const response = await usersApi.post('/register', requestData);
     return response.data;
   },
   
   login: async (credentials: { email: string; password: string }) => {
-    const response = await usersApi.post('/login', credentials);
+    // Adaptar al formato esperado por la API
+    const requestData = {
+      email: credentials.email,
+      contraseña: credentials.password
+    };
+    
+    const response = await usersApi.post('/login', requestData);
     if (response.data.token) {
       localStorage.setItem('auth_token', response.data.token);
     }
@@ -69,13 +86,50 @@ export const authService = {
   },
   
   getCurrentUser: async () => {
+    // Obtener el ID del usuario del token o del almacenamiento local
+    // Esto puede variar según cómo se maneje en tu sistema
+    // Por ahora, asumimos que la API tiene un endpoint para obtener el usuario actual
     const response = await usersApi.get('/profile');
-    return response.data;
+    
+    // Adaptar el formato recibido al formato esperado por la aplicación
+    const userData = response.data;
+    return {
+      id: userData.id,
+      name: userData.nombre,
+      email: userData.email,
+      phone: userData.telefono,
+      role: userData.role || 'customer',
+      // Otros campos si están disponibles
+    };
   },
   
   updateProfile: async (userData: any) => {
-    const response = await usersApi.put('/profile', userData);
-    return response.data;
+    const { id, name, email, phone, ...rest } = userData;
+    
+    // Adaptar al formato esperado por la API
+    const requestData = {
+      nombre: name,
+      email: email,
+      telefono: phone,
+      ...rest
+    };
+    
+    const userId = id || 'me'; // Usar 'me' si no hay ID o el ID del usuario si está disponible
+    const response = await usersApi.put(`/${userId}`, requestData);
+    
+    // Adaptar el formato recibido al formato esperado por la aplicación
+    const updatedUserData = response.data;
+    return {
+      id: updatedUserData.id,
+      name: updatedUserData.nombre,
+      email: updatedUserData.email,
+      phone: updatedUserData.telefono,
+      role: updatedUserData.role || 'customer',
+      address: updatedUserData.address,
+      city: updatedUserData.city,
+      zipCode: updatedUserData.zipCode,
+      // Otros campos si están disponibles
+    };
   },
   
   isAuthenticated: () => {
