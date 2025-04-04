@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { Purchase, PurchaseFormData, UpdatePurchaseData } from '@/types/purchase';
 
 // Configuración base del servidor
-const API_BASE = 'http://102.168.100.3';
+const API_BASE = 'http://localhost';
 const PURCHASES_PORT = '3310';
 const PURCHASES_API = `${API_BASE}:${PURCHASES_PORT}/api/compras`;
 

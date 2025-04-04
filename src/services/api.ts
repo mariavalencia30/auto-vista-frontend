@@ -2,7 +2,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 
 // Configuración base del servidor
-const API_BASE = 'http://102.168.100.3';
+const API_BASE = 'http://localhost';
 const USERS_PORT = '3309';
 const VEHICLES_PORT = '3303';
 const PURCHASES_PORT = '3310';
