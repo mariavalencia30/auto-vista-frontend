@@ -1,143 +1,168 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Menu, X, User, LogOut, ChevronDown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ShoppingCart, LogIn, UserCircle, LogOut, Menu, X, Car, ClipboardList } from 'lucide-react';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetClose,
+} from "@/components/ui/sheet";
 
-const Navbar = () => {
+const Navbar: React.FC = () => {
   const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const isAdmin = user?.role === 'admin';
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
+  const handleLogout = () => {
+    logout();
+    navigate('/');
   };
 
   return (
-    <nav className="bg-white shadow-sm py-4 sticky top-0 z-50">
-      <div className="container mx-auto px-4 md:px-6">
-        <div className="flex justify-between items-center">
+    <header className="bg-white border-b sticky top-0 z-10">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="text-2xl font-bold gradient-text">AutoVista</Link>
+          <Link to="/" className="text-xl font-bold text-primary">
+            AutoConcesionaria
+          </Link>
 
-          {/* Menu de navegación para desktop */}
-          <div className="hidden md:flex items-center space-x-8">
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-6">
             <Link to="/" className="text-gray-700 hover:text-primary transition-colors">
               Inicio
             </Link>
             <Link to="/vehicles" className="text-gray-700 hover:text-primary transition-colors">
               Vehículos
             </Link>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="text-gray-700 hover:text-primary transition-colors flex items-center">
-                  Servicios <ChevronDown className="ml-1 h-4 w-4" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem>
-                  <Link to="/financing" className="w-full">Financiamiento</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Link to="/test-drive" className="w-full">Prueba de manejo</Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Link to="/contact" className="text-gray-700 hover:text-primary transition-colors">
-              Contacto
-            </Link>
-            
-            {/* Botones de autenticación */}
-            {isAuthenticated ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center">
-                    <User className="mr-2 h-4 w-4" />
-                    {user?.name?.split(' ')[0] || 'Usuario'}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem>
-                    <Link to="/profile" className="w-full">Mi perfil</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Link to="/purchases" className="w-full">Mis compras</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={logout} className="text-red-500">
-                    <LogOut className="mr-2 h-4 w-4" /> Cerrar sesión
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <div className="flex space-x-2">
-                <Link to="/login">
-                  <Button variant="outline">Iniciar sesión</Button>
+            {isAuthenticated && (
+              <>
+                <Link to="/purchases/history" className="text-gray-700 hover:text-primary transition-colors">
+                  Mis Compras
                 </Link>
-                <Link to="/register">
-                  <Button>Registrarse</Button>
-                </Link>
-              </div>
+                {isAdmin && (
+                  <Link to="/admin/purchases" className="text-gray-700 hover:text-primary transition-colors">
+                    Admin Compras
+                  </Link>
+                )}
+              </>
             )}
-          </div>
+          </nav>
 
-          {/* Botón de menú móvil */}
-          <div className="md:hidden">
-            <button onClick={toggleMenu} className="text-gray-700">
-              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
-        </div>
-
-        {/* Menú móvil */}
-        {isMenuOpen && (
-          <div className="pt-4 pb-3 space-y-3 md:hidden">
-            <Link to="/" className="block py-2 px-4 text-gray-700 hover:bg-gray-100 rounded" onClick={toggleMenu}>
-              Inicio
-            </Link>
-            <Link to="/vehicles" className="block py-2 px-4 text-gray-700 hover:bg-gray-100 rounded" onClick={toggleMenu}>
-              Vehículos
-            </Link>
-            <Link to="/financing" className="block py-2 px-4 text-gray-700 hover:bg-gray-100 rounded" onClick={toggleMenu}>
-              Financiamiento
-            </Link>
-            <Link to="/test-drive" className="block py-2 px-4 text-gray-700 hover:bg-gray-100 rounded" onClick={toggleMenu}>
-              Prueba de manejo
-            </Link>
-            <Link to="/contact" className="block py-2 px-4 text-gray-700 hover:bg-gray-100 rounded" onClick={toggleMenu}>
-              Contacto
-            </Link>
+          {/* Auth buttons - Desktop */}
+          <div className="hidden md:flex items-center space-x-4">
             {isAuthenticated ? (
               <>
-                <Link to="/profile" className="block py-2 px-4 text-gray-700 hover:bg-gray-100 rounded" onClick={toggleMenu}>
-                  Mi perfil
-                </Link>
-                <Link to="/purchases" className="block py-2 px-4 text-gray-700 hover:bg-gray-100 rounded" onClick={toggleMenu}>
-                  Mis compras
-                </Link>
-                <button onClick={() => { logout(); toggleMenu(); }} className="w-full text-left py-2 px-4 text-red-500 hover:bg-gray-100 rounded">
-                  Cerrar sesión
-                </button>
+                <Button variant="outline" onClick={() => navigate('/profile')}>
+                  <UserCircle className="h-4 w-4 mr-2" />
+                  Perfil
+                </Button>
+                <Button variant="ghost" onClick={handleLogout}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Salir
+                </Button>
               </>
             ) : (
-              <div className="space-y-2 pt-2">
-                <Link to="/login" className="block w-full" onClick={toggleMenu}>
-                  <Button variant="outline" className="w-full">Iniciar sesión</Button>
-                </Link>
-                <Link to="/register" className="block w-full" onClick={toggleMenu}>
-                  <Button className="w-full">Registrarse</Button>
-                </Link>
-              </div>
+              <>
+                <Button variant="outline" onClick={() => navigate('/login')}>
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Ingresar
+                </Button>
+                <Button onClick={() => navigate('/register')}>
+                  Registrarse
+                </Button>
+              </>
             )}
           </div>
-        )}
+
+          {/* Mobile menu button */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden">
+                <Menu className="h-6 w-6" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right">
+              <SheetHeader className="mb-4">
+                <SheetTitle>Menú</SheetTitle>
+              </SheetHeader>
+              <div className="flex flex-col space-y-4">
+                <SheetClose asChild>
+                  <Link to="/" className="flex items-center py-2 text-gray-700 hover:text-primary transition-colors">
+                    Inicio
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link to="/vehicles" className="flex items-center py-2 text-gray-700 hover:text-primary transition-colors">
+                    <Car className="h-4 w-4 mr-2" />
+                    Vehículos
+                  </Link>
+                </SheetClose>
+                
+                {isAuthenticated && (
+                  <>
+                    <SheetClose asChild>
+                      <Link to="/purchases/history" className="flex items-center py-2 text-gray-700 hover:text-primary transition-colors">
+                        <ShoppingCart className="h-4 w-4 mr-2" />
+                        Mis Compras
+                      </Link>
+                    </SheetClose>
+                    
+                    {isAdmin && (
+                      <SheetClose asChild>
+                        <Link to="/admin/purchases" className="flex items-center py-2 text-gray-700 hover:text-primary transition-colors">
+                          <ClipboardList className="h-4 w-4 mr-2" />
+                          Admin Compras
+                        </Link>
+                      </SheetClose>
+                    )}
+                    
+                    <SheetClose asChild>
+                      <Link to="/profile" className="flex items-center py-2 text-gray-700 hover:text-primary transition-colors">
+                        <UserCircle className="h-4 w-4 mr-2" />
+                        Mi Perfil
+                      </Link>
+                    </SheetClose>
+                    
+                    <SheetClose asChild>
+                      <button 
+                        onClick={handleLogout}
+                        className="flex items-center py-2 text-gray-700 hover:text-primary transition-colors"
+                      >
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Cerrar Sesión
+                      </button>
+                    </SheetClose>
+                  </>
+                )}
+                
+                {!isAuthenticated && (
+                  <>
+                    <SheetClose asChild>
+                      <Link to="/login" className="flex items-center py-2 text-gray-700 hover:text-primary transition-colors">
+                        <LogIn className="h-4 w-4 mr-2" />
+                        Ingresar
+                      </Link>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Link to="/register" className="flex items-center py-2 text-gray-700 hover:text-primary transition-colors">
+                        Registrarse
+                      </Link>
+                    </SheetClose>
+                  </>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
-    </nav>
+    </header>
   );
 };
 

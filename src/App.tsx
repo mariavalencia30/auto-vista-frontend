@@ -14,6 +14,11 @@ import VehiclesPage from "./pages/Vehicles/VehiclesPage";
 import VehicleDetail from "./pages/Vehicles/VehicleDetail";
 import AddVehicle from "./pages/Vehicles/AddVehicle";
 import EditVehicle from "./pages/Vehicles/EditVehicle";
+import CreatePurchase from "./pages/Purchases/CreatePurchase";
+import PurchaseHistory from "./pages/Purchases/PurchaseHistory";
+import PurchaseDetail from "./pages/Purchases/PurchaseDetail";
+import EditPurchase from "./pages/Purchases/EditPurchase";
+import AdminPurchaseList from "./pages/Purchases/AdminPurchaseList";
 
 const queryClient = new QueryClient();
 
@@ -86,6 +91,38 @@ const AppRoutes = () => {
       <Route path="/vehicles/edit/:id" element={
         <AdminRoute>
           <EditVehicle />
+        </AdminRoute>
+      } />
+      
+      {/* Rutas de compras */}
+      <Route path="/purchases/new" element={
+        <ProtectedRoute>
+          <CreatePurchase />
+        </ProtectedRoute>
+      } />
+      <Route path="/purchases/new/:vehicleId" element={
+        <ProtectedRoute>
+          <CreatePurchase />
+        </ProtectedRoute>
+      } />
+      <Route path="/purchases/history" element={
+        <ProtectedRoute>
+          <PurchaseHistory />
+        </ProtectedRoute>
+      } />
+      <Route path="/purchases/:id" element={
+        <ProtectedRoute>
+          <PurchaseDetail />
+        </ProtectedRoute>
+      } />
+      <Route path="/purchases/edit/:id" element={
+        <AdminRoute>
+          <EditPurchase />
+        </AdminRoute>
+      } />
+      <Route path="/admin/purchases" element={
+        <AdminRoute>
+          <AdminPurchaseList />
         </AdminRoute>
       } />
       
