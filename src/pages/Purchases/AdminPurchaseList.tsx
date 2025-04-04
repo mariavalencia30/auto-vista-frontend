@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import purchaseService from '@/services/purchaseService';
 import { Purchase } from '@/types/purchase';
 import Navbar from '@/components/Navbar';
@@ -19,14 +20,12 @@ import {
 } from "@/components/ui/dialog";
 
 const AdminPurchaseList: React.FC = () => {
-  const [purchases, setPurchases] = useState<Purchase[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedPurchaseId, setSelectedPurchaseId] = useState<number | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   // Verificar si el usuario es administrador y redirigir si no lo es
   useEffect(() => {
@@ -36,32 +35,52 @@ const AdminPurchaseList: React.FC = () => {
     }
   }, [user, navigate]);
 
-  // Cargar todas las compras
-  useEffect(() => {
-    const fetchAllPurchases = async () => {
-      try {
-        setIsLoading(true);
-        
-        // Aquí normalmente habría un endpoint para obtener todas las compras,
-        // pero como no está en los requisitos, usamos el endpoint de usuario
-        // con el ID del administrador actual
-        if (user) {
-          const userId = parseInt(user.id);
-          const data = await purchaseService.getUserPurchases(userId);
-          setPurchases(data);
-        }
-      } catch (error) {
-        console.error('Error al cargar compras:', error);
-        toast.error('No se pudieron cargar las compras');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // Usar React Query para cargar todas las compras
+  const { 
+    data: purchases = [], 
+    isLoading,
+    isError,
+    error 
+  } = useQuery({
+    queryKey: ['admin-purchases'],
+    queryFn: async () => {
+      // En un sistema real, habría un endpoint específico para administradores
+      // que devuelva todas las compras. Aquí usamos el endpoint existente como ejemplo.
+      if (!user) throw new Error('Usuario no autenticado');
+      
+      const userId = parseInt(user.id);
+      return purchaseService.getUserPurchases(userId);
+    },
+    enabled: !!user && user.role === 'admin'
+  });
 
-    if (user && user.role === 'admin') {
-      fetchAllPurchases();
+  // Mutación para eliminar una compra
+  const deletePurchaseMutation = useMutation({
+    mutationFn: (purchaseId: number) => purchaseService.deletePurchase(purchaseId),
+    onSuccess: () => {
+      toast.success('Compra eliminada con éxito');
+      queryClient.invalidateQueries({ queryKey: ['admin-purchases'] });
+      setShowDeleteDialog(false);
+    },
+    onError: (error) => {
+      console.error('Error al eliminar compra:', error);
+      toast.error('No se pudo eliminar la compra');
     }
-  }, [user]);
+  });
+
+  // Mutación para completar una compra
+  const completePurchaseMutation = useMutation({
+    mutationFn: (purchaseId: number) => purchaseService.registerSale(purchaseId),
+    onSuccess: () => {
+      toast.success('Venta registrada con éxito');
+      queryClient.invalidateQueries({ queryKey: ['admin-purchases'] });
+      setShowCompleteDialog(false);
+    },
+    onError: (error) => {
+      console.error('Error al registrar venta:', error);
+      toast.error('No se pudo registrar la venta');
+    }
+  });
 
   const handleDeletePurchase = (id: number) => {
     setSelectedPurchaseId(id);
@@ -73,51 +92,21 @@ const AdminPurchaseList: React.FC = () => {
     setShowCompleteDialog(true);
   };
 
-  const confirmDelete = async () => {
+  const confirmDelete = () => {
     if (!selectedPurchaseId) return;
-    
-    try {
-      setIsProcessing(true);
-      await purchaseService.deletePurchase(selectedPurchaseId);
-      toast.success('Compra eliminada con éxito');
-      
-      // Actualizar la lista de compras
-      setPurchases(purchases.filter(p => p.id !== selectedPurchaseId));
-    } catch (error) {
-      console.error('Error al eliminar compra:', error);
-      toast.error('No se pudo eliminar la compra');
-    } finally {
-      setIsProcessing(false);
-      setShowDeleteDialog(false);
-    }
+    deletePurchaseMutation.mutate(selectedPurchaseId);
   };
 
-  const confirmComplete = async () => {
+  const confirmComplete = () => {
     if (!selectedPurchaseId) return;
-    
-    try {
-      setIsProcessing(true);
-      await purchaseService.registerSale(selectedPurchaseId);
-      toast.success('Venta registrada con éxito');
-      
-      // Actualizar la lista de compras
-      const updatedPurchases = [...purchases];
-      const index = updatedPurchases.findIndex(p => p.id === selectedPurchaseId);
-      if (index !== -1) {
-        updatedPurchases[index] = {
-          ...updatedPurchases[index],
-          estado: 'completada'
-        };
-        setPurchases(updatedPurchases);
-      }
-    } catch (error) {
-      console.error('Error al registrar venta:', error);
-      toast.error('No se pudo registrar la venta');
-    } finally {
-      setIsProcessing(false);
-      setShowCompleteDialog(false);
-    }
+    completePurchaseMutation.mutate(selectedPurchaseId);
   };
+
+  // Mostrar mensaje de error si la carga falla
+  if (isError) {
+    console.error('Error al cargar compras:', error);
+    toast.error('No se pudieron cargar las compras. Por favor, intente de nuevo más tarde.');
+  }
 
   if (!user || user.role !== 'admin') {
     return null; // Redirección manejada en useEffect
@@ -154,9 +143,9 @@ const AdminPurchaseList: React.FC = () => {
                 <Button 
                   variant="destructive" 
                   onClick={confirmDelete}
-                  disabled={isProcessing}
+                  disabled={deletePurchaseMutation.isPending}
                 >
-                  {isProcessing ? 'Eliminando...' : 'Eliminar'}
+                  {deletePurchaseMutation.isPending ? 'Eliminando...' : 'Eliminar'}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -178,10 +167,10 @@ const AdminPurchaseList: React.FC = () => {
                 </Button>
                 <Button 
                   onClick={confirmComplete}
-                  disabled={isProcessing}
+                  disabled={completePurchaseMutation.isPending}
                   className="bg-green-600 hover:bg-green-700"
                 >
-                  {isProcessing ? 'Procesando...' : 'Confirmar'}
+                  {completePurchaseMutation.isPending ? 'Procesando...' : 'Confirmar'}
                 </Button>
               </DialogFooter>
             </DialogContent>
