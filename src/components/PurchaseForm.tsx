@@ -111,9 +111,10 @@ const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSubmit, vehicleIdPreselec
       return;
     }
 
-    // Crear el objeto de datos de compra
+    // Crear el objeto de datos de compra - asegurarse que vehicleId es siempre un número
     const purchaseData: PurchaseFormData = {
-      ...data,
+      vehicleId: data.vehicleId,  // Asegurarse de que este es un número válido
+      metodoPago: data.metodoPago,
       precioTotal: selectedVehicle.precio,
     };
 
