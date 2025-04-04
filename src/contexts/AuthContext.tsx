@@ -9,6 +9,10 @@ interface User {
   name: string;
   email: string;
   role: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  zipCode?: string;
   // Otros campos del usuario según tu API
 }
 
