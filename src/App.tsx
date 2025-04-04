@@ -10,6 +10,10 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
 import UserProfile from "./pages/Profile/UserProfile";
+import VehiclesPage from "./pages/Vehicles/VehiclesPage";
+import VehicleDetail from "./pages/Vehicles/VehicleDetail";
+import AddVehicle from "./pages/Vehicles/AddVehicle";
+import EditVehicle from "./pages/Vehicles/EditVehicle";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +39,28 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+// Componente AdminRoute para verificar si es administrador
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-lg text-gray-600">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!user || user.role !== 'admin') {
+    return <Navigate to="/" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
 // Componente AppRoutes para utilizar el hook useAuth dentro del AuthProvider
 const AppRoutes = () => {
   return (
@@ -42,11 +68,27 @@ const AppRoutes = () => {
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      
       <Route path="/profile" element={
         <ProtectedRoute>
           <UserProfile />
         </ProtectedRoute>
       } />
+
+      {/* Rutas de vehículos */}
+      <Route path="/vehicles" element={<VehiclesPage />} />
+      <Route path="/vehicles/:id" element={<VehicleDetail />} />
+      <Route path="/vehicles/new" element={
+        <AdminRoute>
+          <AddVehicle />
+        </AdminRoute>
+      } />
+      <Route path="/vehicles/edit/:id" element={
+        <AdminRoute>
+          <EditVehicle />
+        </AdminRoute>
+      } />
+      
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>

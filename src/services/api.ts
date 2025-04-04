@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { toast } from 'sonner';
 
@@ -10,6 +9,7 @@ const PURCHASES_PORT = '3310';
 
 // Endpoints base para cada microservicio
 const USERS_API = `${API_BASE}:${USERS_PORT}/api/usuarios`;
+const VEHICLES_API = `${API_BASE}:${VEHICLES_PORT}/api/vehiculos`;
 
 // Cliente axios para el servicio de usuarios
 const usersApi = axios.create({
@@ -19,35 +19,43 @@ const usersApi = axios.create({
   },
 });
 
-// Interceptor para agregar el token a las solicitudes
-usersApi.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
+// Cliente axios para el servicio de vehículos
+const vehiclesApi = axios.create({
+  baseURL: VEHICLES_API,
+  headers: {
+    'Content-Type': 'application/json',
   },
-  (error) => {
-    return Promise.reject(error);
+});
+
+// Interceptor para agregar el token a las solicitudes
+const addAuthToken = (config) => {
+  const token = localStorage.getItem('auth_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
-);
+  return config;
+};
 
 // Interceptor para manejar errores
-usersApi.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error('API Error:', error.response);
-    
-    // Mensaje de error personalizado basado en el código de estado
-    const errorMessage = error.response?.data?.message || 
-                         'Ha ocurrido un error. Por favor, inténtalo de nuevo.';
-    
-    toast.error(errorMessage);
-    
-    return Promise.reject(error);
-  }
-);
+const handleApiError = (error) => {
+  console.error('API Error:', error.response);
+  
+  // Mensaje de error personalizado basado en el código de estado
+  const errorMessage = error.response?.data?.message || 
+                      'Ha ocurrido un error. Por favor, inténtalo de nuevo.';
+  
+  toast.error(errorMessage);
+  
+  return Promise.reject(error);
+};
+
+// Aplicar interceptores al cliente de usuarios
+usersApi.interceptors.request.use(addAuthToken, error => Promise.reject(error));
+usersApi.interceptors.response.use(response => response, handleApiError);
+
+// Aplicar interceptores al cliente de vehículos
+vehiclesApi.interceptors.request.use(addAuthToken, error => Promise.reject(error));
+vehiclesApi.interceptors.response.use(response => response, handleApiError);
 
 // Servicios de autenticación y usuarios
 export const authService = {
@@ -137,7 +145,48 @@ export const authService = {
   }
 };
 
+// Servicios de vehículos
+export const vehicleService = {
+  // Obtener todos los vehículos
+  getAllVehicles: async () => {
+    const response = await vehiclesApi.get('/');
+    return response.data;
+  },
+  
+  // Obtener un vehículo por ID
+  getVehicleById: async (id) => {
+    const response = await vehiclesApi.get(`/${id}`);
+    return response.data;
+  },
+  
+  // Crear un nuevo vehículo (admin)
+  createVehicle: async (vehicleData) => {
+    const response = await vehiclesApi.post('/', vehicleData);
+    return response.data;
+  },
+  
+  // Actualizar un vehículo (admin)
+  updateVehicle: async (id, vehicleData) => {
+    const response = await vehiclesApi.put(`/${id}`, vehicleData);
+    return response.data;
+  },
+  
+  // Eliminar un vehículo (admin)
+  deleteVehicle: async (id) => {
+    const response = await vehiclesApi.delete(`/${id}`);
+    return response.data;
+  },
+  
+  // Marcar un vehículo como vendido
+  markAsSold: async (id) => {
+    const response = await vehiclesApi.post(`/venta/${id}`);
+    return response.data;
+  }
+};
+
 export default {
   users: usersApi,
-  auth: authService
+  vehicles: vehiclesApi,
+  auth: authService,
+  vehicle: vehicleService
 };
