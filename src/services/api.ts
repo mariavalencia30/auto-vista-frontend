@@ -181,6 +181,12 @@ export const vehicleService = {
   markAsSold: async (id) => {
     const response = await vehiclesApi.post(`/venta/${id}`);
     return response.data;
+  },
+
+  // Buscar vehículos por nombre
+  buscarPorNombre: async (nombre) => {
+    const response = await vehiclesApi.post(`/buscar`, { query: nombre });
+    return response.data;
   }
 };
 

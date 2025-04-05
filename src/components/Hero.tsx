@@ -2,17 +2,15 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Search, ChevronRight } from 'lucide-react';
-import axios from 'axios';
+import { vehicleService } from '@/services/api';
 
 const Hero = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearch = async () => {
     try {
-      const response = await axios.get('/api/vehiculos/buscar', {
-        params: { query: searchQuery },
-      });
-      console.log('Search results:', response.data);
+      const response = await vehicleService.buscarPorNombre({ searchQuery });
+      console.log('Search results:', response);
       // Handle the search results (e.g., navigate to a results page or display them)
     } catch (error) {
       console.error('Error searching vehicles:', error);
