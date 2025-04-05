@@ -9,7 +9,7 @@ const Hero = () => {
 
   const handleSearch = async () => {
     try {
-      const response = await vehicleService.buscarPorNombre({ searchQuery });
+      const response = await vehicleService.buscarPorNombre(searchQuery);
       console.log('Search results:', response);
       // Handle the search results (e.g., navigate to a results page or display them)
     } catch (error) {
