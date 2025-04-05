@@ -1,10 +1,24 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Search, ChevronRight } from 'lucide-react';
+import axios from 'axios';
 
 const Hero = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = async () => {
+    try {
+      const response = await axios.get('/api/vehiculos/buscar', {
+        params: { query: searchQuery },
+      });
+      console.log('Search results:', response.data);
+      // Handle the search results (e.g., navigate to a results page or display them)
+    } catch (error) {
+      console.error('Error searching vehicles:', error);
+    }
+  };
+
   return (
     <div className="relative overflow-hidden bg-gradient-to-r from-blue-50 to-indigo-50">
       <div className="container mx-auto px-4 py-16 md:py-24">
@@ -40,9 +54,11 @@ const Hero = () => {
                 <input 
                   type="text" 
                   placeholder="Busca por marca, modelo o año..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="flex-1 border-none focus:outline-none text-gray-700"
                 />
-                <Button size="sm">Buscar</Button>
+                <Button size="sm" onClick={handleSearch}>Buscar</Button>
               </div>
             </div>
           </div>
