@@ -6,12 +6,12 @@ import { vehicleService } from '@/services/api';
 
 const Hero = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
 
   const handleSearch = async () => {
     try {
       const response = await vehicleService.buscarPorNombre(searchQuery);
-      console.log('Search results:', response);
-      // Handle the search results (e.g., navigate to a results page or display them)
+      setSearchResults(response);
     } catch (error) {
       console.error('Error searching vehicles:', error);
     }
@@ -59,6 +59,20 @@ const Hero = () => {
                 <Button size="sm" onClick={handleSearch}>Buscar</Button>
               </div>
             </div>
+
+            {searchResults.length > 0 && (
+              <div className="mt-6 space-y-4">
+                {searchResults.map((vehicle) => (
+                  <div key={vehicle.id} className="p-4 bg-gray-100 rounded-lg shadow">
+                    <h3 className="text-lg font-semibold">{vehicle.marca} {vehicle.modelo}</h3>
+                    <p className="text-sm text-gray-600">Año: {vehicle.año}</p>
+                    <p className="text-sm text-gray-600">Precio: ${vehicle.precio}</p>
+                    <p className="text-sm text-gray-600">Kilometraje: {vehicle.kilometraje} km</p>
+                    <p className="text-sm text-gray-600">Estado: {vehicle.estado}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           
           {/* Imagen del héroe */}
